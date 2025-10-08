@@ -1,6 +1,7 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import clsx from 'clsx';
 
 import styles from './ArticleParamsForm.module.scss';
 import {
@@ -16,6 +17,7 @@ import {
 import { Select } from 'src/ui/select';
 import { Text } from 'src/ui/text';
 import { RadioGroup } from 'src/ui/radio-group';
+import { useOutsideSidebarClickClose } from './hooks/useOutsideClickClose';
 
 interface ArticleParamsFormProps {
 	articleState: ArticleStateType; // или более конкретный тип
@@ -43,19 +45,10 @@ export const ArticleParamsForm = ({
 		setArticleState(defaultArticleState);
 	};
 
-	useEffect(() => {
-		const handleClick = (event: MouseEvent) => {
-			const { target } = event;
-			if (target instanceof Node && !sidebarRef.current?.contains(target)) {
-				setIsOpen(false);
-			}
-		};
-
-		window.addEventListener('mousedown', handleClick);
-
-		return () => {
-			window.removeEventListener('mousedown', handleClick);
-		};
+	useOutsideSidebarClickClose({
+		isOpen,
+		sidebarRef,
+		onClose: () => setIsOpen(false),
 	});
 
 	return (
@@ -67,9 +60,9 @@ export const ArticleParamsForm = ({
 				}}
 			/>
 			<aside
-				className={`${styles.container} ${
-					isOpen ? styles.container_open : ''
-				}`}>
+				className={clsx(styles.container, {
+					[styles.container_open]: isOpen,
+				})}>
 				<form className={styles.form} onSubmit={handleSubmit}>
 					<div>
 						<Text size={31} weight={800} uppercase>
