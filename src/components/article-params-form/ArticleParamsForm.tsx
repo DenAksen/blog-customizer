@@ -1,20 +1,154 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
+import { useState, useRef, useEffect } from 'react';
 
 import styles from './ArticleParamsForm.module.scss';
+import {
+	ArticleStateType,
+	backgroundColors,
+	contentWidthArr,
+	defaultArticleState,
+	fontColors,
+	fontFamilyOptions,
+	fontSizeOptions,
+	OptionType,
+} from 'src/constants/articleProps';
+import { Select } from 'src/ui/select';
+import { Text } from 'src/ui/text';
+import { RadioGroup } from 'src/ui/radio-group';
 
-export const ArticleParamsForm = () => {
+interface ArticleParamsFormProps {
+	articleState: ArticleStateType; // или более конкретный тип
+	setArticleState: (state: ArticleStateType) => void;
+}
+
+export const ArticleParamsForm = ({
+	articleState,
+	setArticleState,
+}: ArticleParamsFormProps) => {
+	const [isOpen, setIsOpen] = useState(false);
+
+	const [formState, setFormState] = useState(articleState);
+
+	const sidebarRef = useRef<HTMLDivElement>(null);
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		setArticleState(formState);
+		setIsOpen(false);
+	};
+
+	const handleReset = () => {
+		setFormState(defaultArticleState);
+		setArticleState(defaultArticleState);
+	};
+
+	useEffect(() => {
+		const handleClick = (event: MouseEvent) => {
+			const { target } = event;
+			if (target instanceof Node && !sidebarRef.current?.contains(target)) {
+				setIsOpen(false);
+			}
+		};
+
+		window.addEventListener('mousedown', handleClick);
+
+		return () => {
+			window.removeEventListener('mousedown', handleClick);
+		};
+	});
+
 	return (
-		<>
-			<ArrowButton isOpen={false} onClick={() => {}} />
-			<aside className={styles.container}>
-				<form className={styles.form}>
+		<div ref={sidebarRef}>
+			<ArrowButton
+				isOpen={isOpen}
+				onClick={() => {
+					setIsOpen(!isOpen);
+				}}
+			/>
+			<aside
+				className={`${styles.container} ${
+					isOpen ? styles.container_open : ''
+				}`}>
+				<form className={styles.form} onSubmit={handleSubmit}>
+					<div>
+						<Text size={31} weight={800} uppercase>
+							{'Задайте параметры'}
+						</Text>
+					</div>
+					<Select
+						selected={formState.fontFamilyOption}
+						options={fontFamilyOptions}
+						placeholder='Выберите шрифт'
+						title='Шрифт'
+						onChange={(selectedOption: OptionType) => {
+							setFormState({
+								...formState,
+								fontFamilyOption: selectedOption,
+							});
+						}}
+					/>
+					<RadioGroup
+						name='fontSize'
+						options={fontSizeOptions}
+						selected={formState.fontSizeOption}
+						onChange={(option) => {
+							setFormState({
+								...formState,
+								fontSizeOption: option,
+							});
+						}}
+						title='Размер шрифта'
+					/>
+					<Select
+						selected={formState.fontColor}
+						options={fontColors}
+						placeholder='Выберите цвет'
+						title='Цвет шрифта'
+						onChange={(selectedOption: OptionType) => {
+							setFormState({
+								...formState,
+								fontColor: selectedOption,
+							});
+						}}
+					/>
+					<div className={styles.dividingLine} />
+					<Select
+						selected={formState.backgroundColor}
+						options={backgroundColors}
+						placeholder='Выберите цвет'
+						title='Цвет фона'
+						onChange={(selectedOption: OptionType) => {
+							setFormState({
+								...formState,
+								backgroundColor: selectedOption,
+							});
+						}}
+					/>
+					<Select
+						selected={formState.contentWidth}
+						options={contentWidthArr}
+						placeholder='Выберите ширину'
+						title='Ширина контента'
+						onChange={(selectedOption: OptionType) => {
+							setFormState({
+								...formState,
+								contentWidth: selectedOption,
+							});
+						}}
+					/>
+
 					<div className={styles.bottomContainer}>
-						<Button title='Сбросить' htmlType='reset' type='clear' />
+						<Button
+							title='Сбросить'
+							htmlType='reset'
+							type='clear'
+							onClick={handleReset}
+						/>
 						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
 			</aside>
-		</>
+		</div>
 	);
 };
